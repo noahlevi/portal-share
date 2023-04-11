@@ -1,0 +1,167 @@
+{% extends 'portal/admin/base.html' %}
+{% load static %}
+
+{% block user-create-activeness %}active{% endblock %}
+
+{% block content %}
+<div id="app" class="container mt-3" v-cloak>
+  <div class="card w-100">
+    <div class="card-body pt-3">
+      <form>
+        <div class="form-group">
+          <label class="card-text" for="firstName">First name</label>
+          <input type="text" id="firstName" class="form-control" v-model="firstName" placeholder="First name">
+        </div>
+        <div v-for="error in errors.filter(item => item.name == 'firstName')" class="card-text d-flex mt-n3 mb-3 "
+          style="color: #bb7d81">
+          [[ error.errorText ]]
+        </div>
+        <div class="form-group">
+          <label class="card-text" for="lastName">Last name</label>
+          <input type="text" id="lastName" v-model="lastName" class="form-control" placeholder="Last name">
+        </div>
+        <div v-for="error in errors.filter(item => item.name == 'lastName')" class="card-text d-flex mt-n3 mb-3 "
+          style="color: #bb7d81">
+          [[ error.errorText ]]
+        </div>
+        <div class="form-group">
+          <label class="card-text" for="email">Email</label>
+          <input type="text" id="email" v-model="email" class="form-control" placeholder="Email">
+        </div>
+        <div v-for="error in errors.filter(item => item.name == 'email')" class="card-text d-flex mt-n3 mb-3 "
+          style="color: #bb7d81">
+          [[ error.errorText ]]
+        </div>
+        <div class="form-group">
+          <label class="card-text" for="password">Password</label>
+          <input type="password" id="password" v-model="password" class="form-control" placeholder="Password">
+        </div>
+        <div v-for="error in errors.filter(item => item.name == 'password')" class="card-text d-flex mt-n3 mb-3 "
+          style="color: #bb7d81">
+          [[ error.errorText ]]
+        </div>
+        <div class="form-group">
+          <label class="card-text" for="userCompany">Company</label>
+          <select id="userCompany" v-model="userCompany" class="form-control">
+            <option>Choose a company</option>
+            <option v-for="company in companies">[[ company.name ]]</option>
+          </select>
+        </div>
+        <div v-for="error in errors.filter(item => item.name == 'userCompany')" class="card-text d-flex mt-n3 mb-3 "
+          style="color: #bb7d81">
+          [[ error.errorText ]]
+        </div>
+        <!-- <div class="form-group">
+                    <label for="example-datetime-local-input" class="card-text">Created date</label>
+                    <date-picker :format="dateFormat" v-model="createdDate" valueType="format" id="example-datetime-local-input">
+                    </date-picker>
+                </div> -->
+      </form>
+      <button @click="createUser()" class="btn btn-primary text-uppercase float-right">
+        Create<i class="fas fa-angle-right fa-sm ml-1"></i>
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+{% endblock content %}
+
+{% block footer%}
+{% endblock footer %}
+
+{% block js %}
+<script>
+  $(document).ready(function () {
+    $(".mx-input").attr("class", "form-control");
+    $(".mx-datepicker").attr("class", "");
+    // $(".mx-icon-calendar").addClass("mr-3 mt-n1");
+  });
+  let app = new Vue({
+    delimiters: ['[[', ']]'],
+    el: '#app',
+    data: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      userCompany: 'Choose a company',
+      companies: {{ companies | safe }},
+  createdDate: new Date,
+    dateFormat: "dddd, DD.MM.YYYY",
+      errors: [],
+        },
+  computed: {
+    formData(){
+      return {
+        'first_name': this.firstName,
+        'last_name': this.lastName,
+        'email': this.email,
+        'company': this.companies.filter(company => company.name == this.userCompany)[0],
+        'date_joined': new Date(this.createdDate),
+      }
+    }
+  },
+  methods: {
+    checkForm: function (e) {
+      this.errors = [];
+
+      // if (!this.name) {
+      //     this.errors.push('Требуется указать имя.');
+      // }
+      // if (!this.age) {
+      //     this.errors.push('Требуется указать возраст.');
+      // }
+      if (this.firstName == '') {
+        this.errors.push({ 'name': 'firstName', 'errorText': 'Please, enter a first name!' });
+        console.log(this.errors)
+      }
+      if (this.lastName == '') {
+        this.errors.push({ 'name': 'lastName', 'errorText': 'Please, enter a last name!' });
+        console.log(this.errors)
+      }
+
+      if (this.email == '') {
+        this.errors.push({ 'name': 'email', 'errorText': 'Please, enter a email!' });
+        console.log(this.errors)
+      }
+
+      if (this.password == '' || this.password.length <= 8) {
+        this.errors.push({ 'name': 'password', 'errorText': 'Please, enter a valid password!' });
+        console.log(this.errors)
+      }
+      if (this.userCompany == 'Choose a company') {
+        this.errors.push({ 'name': 'userCompany', 'errorText': 'Please, select a user company!' });
+        console.log(this.errors)
+      }
+
+      if (!this.errors.length) {
+        return true;
+      }
+
+      e.preventDefault();
+    },
+    createUser(){
+      if (this.checkForm(event) == true) {
+        console.log(this.formData)
+        axios({
+          headers: { "X-CSRFToken": csrfToken },
+          method: 'post',
+          url: `/portal/user/create`,
+          data: this.formData
+        }).then(response => {
+          if (response.data["status"] == "added") {
+            console.log('Success')
+          }
+          console.log(response)
+          window.location.href = `/portal/admin/user-search`
+        }).catch(error => {
+          console.log(error.request)
+          console.log(error.response.status)
+        })
+      }
+    },
+  },
+    })
+</script>
+{% endblock js %}

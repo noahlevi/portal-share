@@ -1,0 +1,212 @@
+{% extends 'admin/admin_base.html' %}
+{% load static %}
+
+{% block css %}
+<style>
+
+</style>
+{% endblock css %}
+
+{% block head-js %}
+{% endblock head-js %}
+
+{% block content %}
+<div id="app" class="container mt-3" v-cloak>
+    <div class="card w-100">
+        <div class="card-header">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h3 class="card-text mb-n2">Levi Ackerman<span class="font-weight-normal">(Google)</span></h3>
+                    <h5 class="card-text font-weight-light mt-2">ackerman@gmail.com</h5>
+                </div>
+            </div>
+            <div class="mr-6 mt-2">
+                <ul class="nav nav-segment nav-pills scrollbar-horizontal text-uppercase font-weight-bold" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active pt-1 pb-1" id="credits-tab" data-toggle="pill" href="#credits-page" role="tab"
+                            aria-controls="credits-page" aria-selected="true">Credits</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link pt-1 pb-1" id="orders-tab" data-toggle="pill" href="#orders-page" role="tab"
+                            aria-controls="orders-page" aria-selected="false">Orders</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body tab-content pt-3">
+            <div id="credits-page" class="tab-pane fade show active" role="tabpanel" aria-labelledby="credits-page-tab">
+                <div class="">
+                    <div class="col-12 card-title d-flex justify-content-between">
+                        <div class="d-flex">
+                            <div>
+                                <h4 class="card-text mt-2">Total available credits: <span class="font-weight-normal">360000</span>
+                                </h4>
+                            </div>
+                            <!-- Nav -->
+                            <div class="ml-6 text-center">
+                                <ul class="nav nav-segment nav-pills scrollbar-horizontal text-uppercase font-weight-bold" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active pt-1 pb-1" id="pills-one-code-features-example2-tab"
+                                            data-toggle="pill" href="#pills-one-code-features-example2" role="tab"
+                                            aria-controls="pills-one-code-features-example2"
+                                            aria-selected="true">Active</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link pt-1 pb-1" id="pills-two-code-features-example2-tab" data-toggle="pill"
+                                            href="#pills-two-code-features-example2" role="tab"
+                                            aria-controls="pills-two-code-features-example2"
+                                            aria-selected="false">Expired</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-n1">
+                            <button class="btn btn-soft-primary btn-sm text-uppercase" type="button">
+                                + Add credit package
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Nav -->
+                <!-- Tab Content -->
+                <div class="tab-content card-body p-3">
+                    <div class="tab-pane fade show active" id="pills-one-code-features-example2" role="tabpanel"
+                        aria-labelledby="pills-one-code-features-example2-tab">
+                        <div class="table-responsive">
+                            <table id="dtBasicExample" class="table table-hovertable-responsive">
+                                <thead class="thead-light ">
+                                    <tr>
+                                        <th scope="col" class="text-center">Name</th>
+                                        <th scope="col" class="text-center">Available credits</th>
+                                        <th scope="col" class="text-center">Expiry date</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-align-middle">
+                                    <tr v-for="(credit, index) in activeCredits()">
+                                        <td class="pl-2 pr-2 text-center">[[ credit.name ]]</td>
+                                        <td class="pl-2 pr-2 text-center">[[ credit.available_credits ]]</td>
+                                        <td class="pl-2 pr-2 text-center">[[ credit.expiry_date ]]</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-two-code-features-example2" role="tabpanel"
+                        aria-labelledby="pills-two-code-features-example2-tab">
+                        <div class="table-responsive">
+                            <table id="dtBasicExample" class="table table-hovertable-responsive">
+                                <thead class="thead-light ">
+                                    <tr>
+                                        <th scope="col" class="text-center">Name</th>
+                                        <th scope="col" class="text-center">Available credits</th>
+                                        <th scope="col" class="text-center">Expiry date</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-align-middle">
+                                    <tr v-for="(credit, index) in expiredCredits()">
+                                        <td class="pl-2 pr-2 text-center">[[ credit.name ]]</td>
+                                        <td class="pl-2 pr-2 text-center">[[ credit.available_credits ]]</td>
+                                        <td class="pl-2 pr-2 text-center">[[ credit.expiry_date ]]</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="orders-page" class="tab-pane fade" role="tabpanel" aria-labelledby="orders-page-tab">
+                <div class="">
+                    <div class="col-12 card-title d-flex justify-content-between">
+                        <div class="d-flex">
+                            <div>
+                                <h4 class="card-text mt-2">Total available credits: <span class="font-weight-normal">360000</span>
+                                </h4>
+                            </div>
+                        </div>
+                        <div class="mt-n1">
+                            <button class="btn btn-soft-primary btn-sm text-uppercase" type="button">
+                                + Add order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="dtBasicExample" class="table table-hovertable-responsive">
+                            <thead class="thead-light ">
+                                <tr>
+                                    <th scope="col" class="text-center">Purchase date</th>
+                                    <th scope="col" class="text-center">Name</th>
+                                    <th scope="col" class="text-center">Spent Credits</th>
+                                    <th scope="col" class="text-center">Download</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-align-middle">
+                                <tr v-for="(order, index) in orders">
+                                    <td class="pl-2 pr-2 text-center">[[ order.date ]]</td>
+                                    <td class="pl-2 pr-2 text-center">[[ order.name ]]</td>
+                                    <td class="pl-2 pr-2 text-center">[[ order.spent_credits ]]</td>
+                                    <td class="pl-2 pr-2 text-center">
+                                        <button class="btn btn-xs btn-soft-primary text-uppercase mr-2">
+                                            {..} JSON
+                                        </button>
+                                        <button class="btn btn-xs btn-soft-primary text-uppercase">
+                                            <i class="fas fa-file-excel"></i> Excel
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock content %}
+
+{% block footer%}
+{% endblock footer %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        $("#user-credits").attr("href", "/portal/admin/user-credits")
+        $("#user-orders").attr("href", "/portal/admin/user-orders")
+    });
+    let app = new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data: {
+            credits: [
+                { 'name': 'Credit name 1', 'available_credits': 47000, 'expiry_date': '01.08.2021', 'status': 'active' },
+                { 'name': 'Credit name 2', 'available_credits': 35000, 'expiry_date': '11.02.2021', 'status': 'active' },
+                { 'name': 'Credit name 3', 'available_credits': 128900, 'expiry_date': '17.04.2021', 'status': 'expired' },
+                { 'name': 'Credit name 4', 'available_credits': 44300, 'expiry_date': '24.04.2021', 'status': 'active' },
+                { 'name': 'Credit name 5', 'available_credits': 12000, 'expiry_date': '29.05.2021', 'status': 'expired' },
+                { 'name': 'Credit name 6', 'available_credits': 40100, 'expiry_date': '02.07.2021', 'status': 'active' }
+            ],
+            orders: [
+                { 'name': 'Order name 1', 'spent_credits': 15000, 'date': '01.04.2021' },
+                { 'name': 'Order name 2', 'spent_credits': 6021, 'date': '28.03.2021' },
+                { 'name': 'Order name 3', 'spent_credits': 19500, 'date': '12.03.2021' },
+                { 'name': 'Order name 4', 'spent_credits': 789, 'date': '17.02.2021' },
+                { 'name': 'Order name 5', 'spent_credits': 11670, 'date': '23.01.2021' },
+                { 'name': 'Order name 6', 'spent_credits': 5400, 'date': '13.01.2021' }
+            ]
+        },
+        computed: {},
+        methods: {
+            expiredCredits() {
+                return this.credits.filter(credit => credit.status == "expired")
+            },
+            activeCredits() {
+                return this.credits.filter(credit => credit.status == "active")
+            }
+        },
+    })
+</script>
+{% endblock js %}

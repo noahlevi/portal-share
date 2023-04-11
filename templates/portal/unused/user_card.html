@@ -1,0 +1,161 @@
+{% extends 'admin/admin_base.html' %}
+{% load static %}
+
+{% block css %}
+<style>
+
+</style>
+{% endblock css %}
+
+{% block head-js %}
+{% endblock head-js %}
+
+{% block content %}
+<div id="app" class="container mt-3" v-cloak>
+    <div class="card w-100">
+        <div class="card-header">
+            <div class="col-12 d-flex justify-content-between pl-0 pr-0">
+                <div>
+                    <h3 class="card-text mt-2">
+                        <!-- [[ user.first_name ]] [[user.last_name ]]
+                        <span class="font-weight-normal">([[ user.company ]])</span> -->
+                        USER CARD
+                    </h3>
+                    <!-- <h5 class="card-text font-weight-light mt-2">[[ user.email ]]</h5> -->
+                </div>
+                <div>
+                    <a :href="'/portal/admin/user/' + user.id + '/update'">
+                        <button class="btn btn-sm btn-soft-primary text-uppercase mr-2" type="button">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </a>
+                    <button class="btn btn-sm btn-soft-primary text-uppercase" 
+                        type="button" data-toggle="modal" data-target="#userDeleteModal">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <div class="modal fade" id="userDeleteModal" tabindex="-1" role="dialog"
+                        aria-labelledby="userDeleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content mr-auto ml-auto">
+                                <div class="modal-header">
+                                    <h5 class="modal-title card-text" id="userDeleteModalLabel">Delete user</h5>
+                                    <button type="button" class="btn btn-xs btn-icon btn-soft-secondary" data-dismiss="modal"
+                                        aria-label="Close">
+                                        <svg aria-hidden="true" width="10" height="10" viewBox="0 0 18 18"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path fill="currentColor"
+                                                d="M11.5,9.5l5-5c0.2-0.2,0.2-0.6-0.1-0.9l-1-1c-0.3-0.3-0.7-0.3-0.9-0.1l-5,5l-5-5C4.3,2.3,3.9,2.4,3.6,2.6l-1,1 C2.4,3.9,2.3,4.3,2.5,4.5l5,5l-5,5c-0.2,0.2-0.2,0.6,0.1,0.9l1,1c0.3,0.3,0.7,0.3,0.9,0.1l5-5l5,5c0.2,0.2,0.6,0.2,0.9-0.1l1-1 c0.3-0.3,0.3-0.7,0.1-0.9L11.5,9.5z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="modal-body mr-auto ml-auto">
+                                    <h4 class="card-text">Are you sure to delete this user [[ user.first_name ]] [[ user.last_name ]]?</h4>
+                                </div>
+                                <div class="mb-4 mr-auto ml-auto">
+                                    <button data-dismiss="modal" class="btn btn-sm btn-white text-uppercase mr-2" type="button">
+                                        No, cancel.
+                                    </button>
+                                    <button @click="deleteUser()" data-dismiss="modal" id="deleteActiveUserModalButton"
+                                        class="btn btn-sm btn-primary text-uppercase ml-2" type="button">
+                                        Yes, delete!
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body pb-4">
+            <div class="col-12 card-title pl-0 pr-0">
+                <div class="row">
+                    <div class="col-4">
+                            <h5 class="card-text mt-2">Full Name: 
+                                <span class="font-weight-normal">
+                                    [[ user.first_name ]] [[ user.last_name ]] 
+                                </span>
+                            </h5>
+                    </div>
+                    <div class="col-4">
+                            <h5 class="card-text mt-2">Email: 
+                                <span class="font-weight-normal">
+                                    [[ user.email ]]
+                                </span>
+                            </h5>
+                    </div>
+                    <div class="col-4">
+                            <h5 class="card-text mt-2">Company: 
+                                <span class="font-weight-normal">
+                                    [[ user.company.name ]]
+                                </span>
+                            </h5>
+                    </div>
+                    <div class="col-4 mt-4">
+                        <h5 class="card-text mt-2">Date Joined:
+                            <span class="font-weight-normal">
+                                [[ dateFormat(user.date_joined) ]]
+                            </span>
+                        </h5>
+                    </div>
+                    <div class="col-4 mt-4">
+                            <h5 class="card-text mt-2">Total available credits: <span class="font-weight-normal">[[
+                                    totalAvailableCreditsCommaSeparated() ]]</span>
+                            </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+{% endblock content %}
+
+{% block footer%}
+{% endblock footer %}
+
+{% block js %}
+<script>
+    $(document).ready(function () {
+        $("#user-credits").attr("href", "/portal/admin/user-credits")
+        $("#user-orders").attr("href", "/portal/admin/user-orders")
+        $("#deleteActiveCreditsModalButton").click(function () {
+            $('#exampleModal').modal('hide')
+        });
+        $("#deleteExpiredCreditsModalButton").click(function () {
+            $('#expiredModal').modal('hide')
+        });
+    });
+    let app = new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data: {
+            user: {{ user | safe }},
+            total_available_credits: {{ total_available_credits }},
+        },
+        computed: { },
+        methods: {
+            dateFormat(timeString){
+                return moment(timeString).format("dddd, DD.MM.YYYY")
+            },
+            totalAvailableCreditsCommaSeparated(){
+                return this.total_available_credits.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            },
+            deleteUser(){
+                axios({
+                    headers: { "X-CSRFToken": csrfToken },
+                    url: `/portal/user/${this.user.id}/delete`,
+                }).then(response => {
+                    let data = response["data"]
+                    if (data["status"] == "deleted") {
+                        window.location.href = `/portal/admin/user-search`
+                    }
+                }).catch(error => {
+                    console.log(error.request)
+                    console.log(error.response.status)
+                })
+            },
+        },
+    })
+</script>
+{% endblock js %}

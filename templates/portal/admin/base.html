@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block pre-css %}
+<!-- Datatables -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+
+<!-- Datetime picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vue2-datepicker@3.9.0/index.css">
+{% endblock pre-css %}
+
+{% block css %}
+<style>
+  .custom-select {
+    line-height: 1;
+    height: auto;
+  }
+
+  /* width */
+  ::-webkit-scrollbar {
+    height: 5px;
+    width: 5px;
+  }
+
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #9CA3AF;
+  }
+
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: var(--primary);
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+
+  /* vue datepicker */
+  .mx-datepicker {
+    width: 100%;
+  }
+  
+  .mx-input {
+    display: block;
+    width: 100%;
+    height: calc(1.6em + 1.625rem);
+    padding: 0.75rem 1rem;
+    font-size: var(--font-size-normal);
+    font-weight: 400;
+    line-height: 1.6;
+    color: #1e2022;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 0.0625rem solid #e7eaf3;
+    border-radius: 0.3125rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  .mx-icon-calendar, .mx-icon-clear {
+    top: 35%;
+  }
+</style>
+{% block more-css %}
+{% endblock more-css %}
+{% endblock css %}
+
+{% block content %}
+{% endblock content %}
+
+{% block js %}
+<!-- Datetime picker -->
+<script src="https://cdn.jsdelivr.net/npm/vue2-datepicker@3.9.0/index.min.js"></script>
+
+<!-- Datatables -->
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/plug-ins/1.10.12/sorting/datetime-moment.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
+
+{% block more-js %}
+{% endblock more-js %}
+{% endblock js %}

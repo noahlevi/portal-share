@@ -1,0 +1,39 @@
+{% extends 'portal/user/base.html' %}
+{% load static %}
+
+{% block nav-api %}active{% endblock nav-api %}
+
+{% block banner-header %}API key{% endblock banner-header %}
+
+{% block content %}
+<!-- Body -->
+<div class="card-body">
+  <h3 class="card-text mb-3">Your API Key</h3>
+  {% if api_token %}
+  <div class="input-group mb-3">
+    <input id="textExample" type="text" class="form-control" value="{{ api_token }}" disabled>
+    <div class="input-group-append">
+      <a class="js-clipboard input-group-text bg-white" href="javascript:;" data-hs-clipboard-options='{
+         "contentTarget": "#textExample",
+         "successText": "Copied!"
+       }'>Copy to Clipboard!</a>
+    </div>
+  </div>
+  {% else %}
+  <div>
+    Please request for an api token from <a href="mailto:contact@mantheos.com">contact@mantheos.com</a>
+  </div>
+  {% endif %}
+</div>
+<!-- End Body -->
+{% endblock content %}
+
+{% block js %}
+<script>
+  $(document).on('ready', function () {
+    $('.js-clipboard').each(function () {
+      var clipboard = $.HSCore.components.HSClipboard.init(this);
+    });
+  });
+</script>
+{% endblock js %}

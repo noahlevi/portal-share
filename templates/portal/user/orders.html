@@ -1,0 +1,87 @@
+{% extends 'portal/user/base.html' %}
+{% load static %}
+
+{% block nav-orders %}active{% endblock nav-orders %}
+
+{% block banner-header %}Orders{% endblock banner-header %}
+
+{% block content %}
+<div class="card-body">
+  <div id="app" v-cloak>
+    <h3 class="card-text mb-3">Your orders</h3>
+    <div class="table-responsive pb-3">
+      <table id="ordersTable" class="table table-hovertable-responsive">
+        <thead class="thead-light ">
+          <tr>
+            <th scope="col" class="text-center">Created date</th>
+            <th scope="col" class="text-center">Name</th>
+            <th scope="col" class="text-center">Download</th>
+            <th scope="col" class="text-center">Currency</th>
+            <th scope="col" class="text-center">Total Amount</th>
+            <th scope="col" class="text-center">Service Charge <i class="fas fa-info-circle" data-toggle="tooltip"
+                title="Service charge is included in total amount"></i></th>
+          </tr>
+        </thead>
+        <tbody class="table-align-middle">
+          <tr v-for="(order, index) in sortedOrders(orders)">
+            <td class="text-center">[[ dateFormat(order.created) ]]</td>
+            <td class="text-center">[[ order.name ]]</td>
+            <td class="text-center">
+              <div v-if="order.s3_link">
+                <a class="btn btn-xs btn-primary" :href="s3BaseUrl + order.s3_link + '.json'">
+                  json
+                </a>
+                <a class="btn btn-xs btn-primary" :href="s3BaseUrl + order.s3_link + '.xlsx'">
+                  excel
+                </a>
+              </div>
+              <div v-else>
+                In Progress
+              </div>
+            </td>
+            <td class="text-center">[[ order.currency ]]</td>
+            <td class="text-center"><span v-if="order.payment_type != 'Credits'">$</span>[[ order.total_charge ]]
+            </td>
+            <td class="text-center"><span v-if="order.payment_type != 'Credits'">$</span>[[ order.service_charge ]]</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block js %}
+<script>
+  $(document).ready(function () {
+    $('#ordersTable').DataTable({
+      dom: "<'row'<'col-sm-12 col-md-6'><'col-sm-12 col-md-6 text-right'l>>" +
+        "<'row'<'col-sm-12'tr>>" +
+        "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+      searching: false,
+      responsive: true,
+      "ordering": true,
+      "order": [[0, "desc"]],
+      "columnDefs": [
+        { className: "text-nowrap", "targets": [0, 1, 2, 3, 4, 5] }
+      ]
+    });
+  });
+  let app = new Vue({
+    delimiters: ['[[', ']]'],
+    el: '#app',
+    data: {
+      s3BaseUrl: '{{ s3_base_url }}',
+      orders: JSON.parse('{{ orders | safe }}')
+    },
+    methods: {
+      dateFormat(timeString) {
+        return moment(timeString).format("D MMM YYYY, H:mm:ss")
+      },
+      sortedOrders(orders) {
+        return orders.sort((a, b) => new Date(b.created) - new Date(a.created))
+      },
+    }
+  })
+</script>
+{% endblock js %}

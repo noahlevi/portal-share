@@ -1,0 +1,782 @@
+{% extends 'portal/admin/base.html' %}
+{% load static %}
+
+{% block more-css %}
+<style>
+  .selected {
+    background-color: var(--primary);
+    color: white;
+  }
+
+  div.dataTables_wrapper div.dataTables_paginate ul.pagination {
+    justify-content: center;
+  }
+
+  div.dataTables_wrapper div.dataTables_filter {
+    text-align: center;
+  }
+
+  /* 
+  body {
+    font-size: 0.8rem;
+  } */
+</style>
+{% endblock more-css %}
+
+{% block head-js %}
+{% endblock head-js %}
+
+{% block portal-activeness %}active{% endblock %}
+{% block navbar-container %}container-fluid{% endblock navbar-container %}
+
+{% block content %}
+<div id="app" class="mt-3" v-cloak>
+  <div class="container-fluid mb-3">
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="card border w-100">
+          <div class="tab-content card-body pt-3 pb-2">
+            <div class="table-responsive">
+              <table id="clientsTable" class="table table-hovertable-responsive">
+                <thead class="thead-light">
+                  <tr>
+                    <th scope="col" class="text-center">Name</th>
+                    <th scope="col" class="text-center">Company</th>
+                    <th scope="col" class="text-center">Email</th>
+                    <th scope="col" class="text-center">Credits</th>
+                    <th scope="col" class="text-center">ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(user, index) in users">
+                    <td class="px-0 text-center">
+                      <span class="font-size-1">[[ user.first_name ]] [[ user.last_name ]]</span>
+                    </td>
+                    <td class="px-0 text-center">
+                      <span class="font-size-1">[[ user.company?.name ]]</span>
+                    </td>
+                    <td class="px-0 text-center">[[ user.email ]]</td>
+                    <td class="px-0 text-center">[[ user.credits ]]</td>
+                    <td class="px-0 text-center">
+                      [[ user.id ]]
+                    </td>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="selectedUser" class="col-lg-8">
+        <div class="mb-3">
+          <div class="card border w-100">
+            <div class="px-3 pt-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="card-text h5 mb-0">
+                  Credits:
+                  <span class="font-weight-normal">
+                    [[ totalAvailableCreditsCommaSeparated(selectedUser.credits.total) ]]
+                  </span>
+                </div>
+                <div class="text-center">
+                  <ul class="nav nav-segment nav-pills scrollbar-horizontal font-weight-bold" role="tablist">
+                    <li class="nav-item">
+                      <a class="nav-link active py-1" id="active-tab" data-toggle="pill" href="#active" role="tab"
+                        aria-controls="active" aria-selected="true">Active</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link py-1" id="expired-tab" data-toggle="pill" href="#expired" role="tab"
+                        aria-controls="expired" aria-selected="false">Expired</a>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <button @click="showAddOrUpdateCreditsModal(null)" class="btn btn-primary btn-xs" type="button">
+                    + Credits
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="tab-content py-3 px-2">
+              <div id="active" class="tab-pane fade show active" role="tabpanel" aria-labelledby="active-tab">
+                <div class="table-responsive">
+                  <table id="activeCreditsTable" class="table table-hovertable-responsive">
+                    <thead class="thead-light">
+                      <tr>
+                        <th scope="col" class="text-center">Available credits</th>
+                        <th scope="col" class="text-center">Start date</th>
+                        <th scope="col" class="text-center">Expiry date</th>
+                        <th scope="col" class="text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="table-align-middle">
+                      <tr v-for="credit in selectedUser.credits.active">
+                        <td class="px-1 text-center">[[ credit.credits ]]</td>
+                        <td class="px-1 text-center">[[ dateFormat(credit.start_datetime) ]]</td>
+                        <td class="px-1 text-center">[[ dateFormat(credit.expiry_datetime) ]]</td>
+                        <td class="px-0 text-center">
+                          <button class="btn btn-xs btn-primary" @click="showAddOrUpdateCreditsModal(credit)"
+                            type="button">
+                            <i class="fas fa-edit"></i>
+                          </button>
+                          <button class="btn btn-xs btn-primary" @click="showDeleteModal('credits', credit.id)"
+                            type="button">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="expired" class="tab-pane fade" role="tabpanel" aria-labelledby="expired-tab">
+                <div class="table-responsive">
+                  <table id="expiredCreditsTable" class="table table-hovertable-responsive">
+                    <thead class="thead-light ">
+                      <tr>
+                        <th scope="col" class="text-center">Available credits</th>
+                        <th scope="col" class="text-center">Start date</th>
+                        <th scope="col" class="text-center">Expiry date</th>
+                        <th scope="col" class="text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="table-align-middle">
+                      <tr v-for="(credit, index) in selectedUser.credits.expired">
+                        <td class="px-1 text-center">[[ credit.credits ]]</td>
+                        <td class="px-1 text-center">[[ dateFormat(credit.start_datetime) ]]</td>
+                        <td class="px-1 text-center">[[ dateFormat(credit.expiry_datetime) ]]</td>
+                        <td class="px-0 text-center">
+                          <button class="btn btn-xs btn-primary" @click="showAddOrUpdateCreditsModal(credit)"
+                            type="button">
+                            <i class="fas fa-edit"></i>
+                          </button>
+                          <button class="btn btn-xs btn-primary" @click="showDeleteModal('credits', credit.id)"
+                            type="button">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <div class="card border w-100">
+            <div class="px-3 pt-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="card-text h5 mb-0">
+                  Orders:
+                  <span class="font-weight-normal">
+                    [[ selectedUser.orders.length ]]
+                  </span>
+                </div>
+                <div>
+                  <button @click="showAddOrUpdateOrderModal(null)" class="btn btn-primary btn-xs" type="button">
+                    + Order
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="px-2 py-3">
+              <div class="table-responsive pt-0">
+                <table id="ordersTable" class="table table-hovertable-responsive">
+                  <thead class="thead-light ">
+                    <tr>
+                      <th class="text-center">Created</th>
+                      <th class="text-center">Name</th>
+                      <th class="text-center">Download</th>
+                      <th class="text-center">Currency</th>
+                      <th class="text-center">Total Charge</th>
+                      <th class="text-center">Service Charge</th>
+                      <th class="text-center">Snapshot</th>
+                      <th class="text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="table-align-middle">
+                    <tr v-for="(order, index) in selectedUser.orders">
+                      <td class="px-1 text-center">[[ dateFormat(order.created) ]]</td>
+                      <td class="px-1 text-center">[[ order.name ]]</td>
+                      <td class="px-1 text-center">
+                        <div v-if="order.s3_link">
+                          <a class="btn btn-xs btn-primary" :href="s3BaseUrl + order.s3_link + '.json'">
+                            json
+                          </a>
+                          <a class="btn btn-xs btn-primary" :href="s3BaseUrl + order.s3_link + '.xlsx'">
+                            excel
+                          </a>
+                        </div>
+                        <div v-else>
+                          Unexported
+                        </div>
+                      </td>
+                      <td class="px-1 text-center">[[ order.currency ]]</td>
+                      <td class="px-1 text-center">[[ order.total_charge ]]</td>
+                      <td class="px-1 text-center">[[ order.service_charge ]]</td>
+                      <td class="px-1 text-center">[[ order.tas ]]</td>
+                      <td class="px-0 text-center">
+                        <button class="btn btn-xs btn-primary" @click="showAddOrUpdateOrderModal(order)" type="button">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-xs btn-primary" type="button"
+                          @click="showDeleteModal('order', order.id)">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </td>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="col-lg-8 border rounded space-2 d-flex">
+        <div class="m-auto">
+          Select a user
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="deleteModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div></div>
+          <button type="button" class="btn btn-xs btn-icon" data-dismiss="modal" aria-label="Close">
+            <svg aria-hidden="true" width="10" height="10" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor"
+                d="M11.5,9.5l5-5c0.2-0.2,0.2-0.6-0.1-0.9l-1-1c-0.3-0.3-0.7-0.3-0.9-0.1l-5,5l-5-5C4.3,2.3,3.9,2.4,3.6,2.6l-1,1 C2.4,3.9,2.3,4.3,2.5,4.5l5,5l-5,5c-0.2,0.2-0.2,0.6,0.1,0.9l1,1c0.3,0.3,0.7,0.3,0.9,0.1l5-5l5,5c0.2,0.2,0.6,0.2,0.9-0.1l1-1 c0.3-0.3,0.3-0.7,0.1-0.9L11.5,9.5z" />
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body pt-0">
+          <h4 class="card-text text-center">Confirm deletion of <span class="text-capitalize">[[ selectedObj?.type
+              ]]</span></h4>
+          <div class="text-center">
+            <button data-dismiss="modal" class="btn btn-sm btn-white mr-1" type="button">
+              No
+            </button>
+            <button @click="deleteObj()" data-dismiss="modal" class="btn btn-sm btn-primary" type="button">
+              Yes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="creditsModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="h4 card-text">
+            <span class="font-weight-semi-bold text-capitalize">[[ creditsSubmitType ]]</span> Credits
+          </div>
+          <button type="button" class="btn btn-xs btn-icon" data-dismiss="modal" aria-label="Close">
+            <svg aria-hidden="true" width="10" height="10" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor"
+                d="M11.5,9.5l5-5c0.2-0.2,0.2-0.6-0.1-0.9l-1-1c-0.3-0.3-0.7-0.3-0.9-0.1l-5,5l-5-5C4.3,2.3,3.9,2.4,3.6,2.6l-1,1 C2.4,3.9,2.3,4.3,2.5,4.5l5,5l-5,5c-0.2,0.2-0.2,0.6,0.1,0.9l1,1c0.3,0.3,0.7,0.3,0.9,0.1l5-5l5,5c0.2,0.2,0.6,0.2,0.9-0.1l1-1 c0.3-0.3,0.3-0.7,0.1-0.9L11.5,9.5z" />
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body pt-0">
+          <div class="mb-1">
+            <div>
+              <label for="creditsAmount" class="card-text">Credits</label>
+              <input type="number" id="credits-amount" v-model="creditsAmount" @change="validateCredits()" min="0"
+                class="form-control">
+            </div>
+            <div class="text-danger">
+              [[ creditsAmountError ]]
+            </div>
+          </div>
+          <div class="mb-1">
+            <div>
+              <label for="startDate" class="card-text">Start date</label>
+              <date-picker :format="'DD-MM-YYYY'" v-model="creditsStartDate" @change="validateCredits()"
+                id="credits-start-date"></date-picker>
+            </div>
+            <div class="text-danger">
+              [[ creditsStartDateError ]]
+            </div>
+          </div>
+          <div class="mb-3">
+            <div>
+              <label for="expiryDate" class="card-text">Expiry date</label>
+              <date-picker :format="'DD-MM-YYYY'" v-model="creditsExpiryDate" @change="validateCredits()"
+                id="credits-expiry-date"></date-picker>
+            </div>
+            <div class="text-danger">
+              [[ creditsExpiryDateError ]]
+            </div>
+          </div>
+          <div class="text-center">
+            <button @click="addOrUpdateCredit()" class="btn btn-sm btn-primary" type="button">
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="orderModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="h4 card-text">
+            <span class="text-capitalize">[[ orderSubmitType ]]</span> Order
+          </div>
+          <button type="button" class="btn btn-xs btn-icon" data-dismiss="modal" aria-label="Close">
+            <svg aria-hidden="true" width="10" height="10" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor"
+                d="M11.5,9.5l5-5c0.2-0.2,0.2-0.6-0.1-0.9l-1-1c-0.3-0.3-0.7-0.3-0.9-0.1l-5,5l-5-5C4.3,2.3,3.9,2.4,3.6,2.6l-1,1 C2.4,3.9,2.3,4.3,2.5,4.5l5,5l-5,5c-0.2,0.2-0.2,0.6,0.1,0.9l1,1c0.3,0.3,0.7,0.3,0.9,0.1l5-5l5,5c0.2,0.2,0.6,0.2,0.9-0.1l1-1 c0.3-0.3,0.3-0.7,0.1-0.9L11.5,9.5z" />
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body pt-0">
+          <div v-show="orderErrors" class="bg-danger rounded px-3 pt-2 pb-1 mb-3">
+            <div v-for="(value, key) in orderErrors">
+              <div class="h5 mb-1">
+                [[ key ]]
+              </div>
+              <div v-for="(error, index) in value" class="mb-1">
+                [[ error ]]
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="mb-2 col-lg-6">
+              <div>
+                <label for="order-name" class="card-text">Name</label>
+                <input type="text" id="order-name" v-model="orderName" @change="validateOrder()"
+                  class="form-control">
+              </div>
+              <div class="text-danger">
+                [[ orderNameError ]]
+              </div>
+            </div>
+            <div class="mb-2 pl-lg-0 col-lg-6">
+              <div>
+                <label for="tas" class="card-text">Target Audience Snapshot ID</label>
+                <input type="number" id="tas" v-model="orderTas" @change="validateOrder()" min="0"
+                  class="form-control">
+              </div>
+              <div class="text-danger">
+                [[ orderTasError ]]
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="mb-2 col-lg-4">
+              <div>
+                <label for="currency" class="card-text">Currency</label>
+                <select id="taSnapshot" id="currency" v-model="orderCurrency" @change="validateOrder()" class="form-control card-text">
+                  <option value="credits">credits</option>
+                  <option value="usd">usd</option>
+                  <option value="sgd">sgd</option>
+                  <option value="euro">euro</option>
+                </select>
+              </div>
+              <div class="text-danger">
+                [[ orderCurrencyError ]]
+              </div>
+            </div>
+            <div class="mb-2 pl-lg-0 col-lg-4">
+              <div>
+                <label for="total-charge" class="card-text">Total Charge</label>
+                <input type="number" id="total-charge" v-model="orderTotalCharge" @change="validateOrder()" min="0"
+                  class="form-control">
+              </div>
+              <div class="text-danger">
+                [[ orderTotalChargeError ]]
+              </div>
+            </div>
+            <div class="mb-2 pl-lg-0 col-lg-4">
+              <div>
+                <label for="service-charge" class="card-text">Service Charge</label>
+                <input type="number" id="service-charge" v-model="orderServiceCharge" @change="validateOrder()" min="0"
+                  class="form-control">
+              </div>
+              <div class="text-danger">
+                [[ orderServiceChargeError ]]
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" id="deduct-credits" v-model="orderDeductCredits" class="custom-control-input" @change="validateOrder()">
+              <label class="custom-control-label pt-1" for="deduct-credits">Deduct user's credits</label>
+            </div>
+            <div class="text-danger">
+              [[ orderDeductCreditsError ]]
+            </div>
+          </div>
+          <div class="text-center">
+            <button @click="addOrUpdateOrder()" class="btn btn-sm btn-primary" type="button">
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block footer%}
+{% endblock footer %}
+
+{% block more-js %}
+<script>
+  let app = new Vue({
+    delimiters: ['[[', ']]'],
+    el: '#app',
+    data: {
+      s3BaseUrl: '{{ s3_base_url }}',
+      users: {{ users | safe }},
+      clientsTable: null,
+      selectedUser: null,
+      selectedObj: null,
+
+      // credits input
+      creditsSubmitType: null,
+      creditsId: null,
+      creditsAmount: null,
+      creditsStartDate: null,
+      creditsExpiryDate: null,
+      // errors
+      creditsAmountError: null,
+      creditsStartDateError: null,
+      creditsExpiryDateError: null,
+
+      // orders input
+      orderSubmitType: null,
+      orderId: null,
+      orderName: null,
+      orderCurrency: "credits",
+      orderTotalCharge: 0,
+      orderServiceCharge: 0,
+      orderTas: null,
+      orderDeductCredits: true,
+      // errors
+      orderNameError: null,
+      orderCurrencyError: null,
+      orderTotalChargeError: null,
+      orderServiceChargeError: null,
+      orderTasError: null,
+      orderDeductCreditsError: null,
+      orderErrors: null
+    },
+    methods: {
+      dateFormat(timeString) {
+        return moment(timeString).format("DD-MM-YYYY")
+      },
+      totalAvailableCreditsCommaSeparated(credits) {
+        return credits.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+      },
+      initCreditsTable() {
+        var activeCreditsTable = $("#activeCreditsTable").DataTable({
+          retrieve: true,
+          dom: "<'row'<'col-sm-12'f>>" +
+            "<'row'<'col-sm-12 table-responsive mb-5'tr>>" +
+            "<'row'<'col-sm-12'p><'col-sm-12'>>",
+          searching: false,
+          fixedColumns: true,
+          ordering: true,
+          order: [[3, "desc"]],
+        })
+        var expiredCreditsTable = $("#expiredCreditsTable").DataTable({
+          retrieve: true,
+          dom: "<'row'<'col-sm-12'f>>" +
+            "<'row'<'col-sm-12 table-responsive mb-5'tr>>" +
+            "<'row'<'col-sm-12'p><'col-sm-12'>>",
+          searching: false,
+          fixedColumns: true,
+          ordering: true,
+          order: [[3, "desc"]],
+        })
+        // console.log(activeCreditsTable)
+        // console.log(expiredCreditsTable)
+      },
+      initOrdersTable() {
+        var ordersTable = $("#ordersTable").DataTable({
+          retrieve: true,
+          dom: "<'row'<'col-sm-12'f><'col-sm-12's>>" +
+            "<'row'<'col-sm-12 table-responsive mb-5'tr>>" +
+            "<'row'<'col-sm-12'p><'col-sm-12'>>",
+          // searching: false,
+          fixedColumns: true,
+          ordering: true,
+          order: [[3, "desc"]],
+        })
+        // console.log(ordersTable)
+      },
+      getUser(id) {
+        // get user data
+        axios({
+          headers: { "X-CSRFToken": csrfToken },
+          method: "post",
+          url: "",
+          data: {
+            "user_id": id
+          }
+        }).then(response => {
+          this.selectedUser = response["data"]
+          setTimeout(function(){ 
+            app.initCreditsTable()
+            app.initOrdersTable()
+          }, 1);
+        })
+      },
+      showDeleteModal(type, id) {
+        this.selectedObj = {
+          type: type,
+          id: id
+        }
+        $('#deleteModal').modal('show')
+      },
+
+      // credits
+      showAddOrUpdateCreditsModal(credits) {
+        this.creditsAmountError = null
+        this.creditsStartDateError = null
+        this.creditsExpiryDateError = null
+        if (credits) {
+          console.log("update credits")
+          this.creditsSubmitType = "update"
+          this.creditsId = credits.id
+          this.creditsAmount = credits.credits
+          this.creditsStartDate = new Date(credits.start_datetime)
+          this.creditsExpiryDate = new Date(credits.expiry_datetime)
+        } else {
+          console.log("add credits")
+          this.creditsSubmitType = "add"
+          this.creditsId = null
+          this.creditsAmount = null
+          this.creditsStartDate = null
+          this.creditsExpiryDate = null
+        }
+        $("#creditsModal").modal("show")
+      },
+      addOrUpdateCredit() {
+        if (this.validateCredits()) {
+          axios({
+            headers: { "X-CSRFToken": csrfToken },
+            method: "post",
+            url: `/portal/admin/user/credits/add-or-update`,
+            data: {
+              user: this.selectedUser.id,
+              type: this.creditsSubmitType,
+              id: this.creditsSubmitType == "add" ? null : this.creditsId,
+              credits: this.creditsAmount,
+              start_datetime: this.creditsStartDate,
+              expiry_datetime: this.creditsExpiryDate,
+            }
+          }).then(response => {
+            // refresh user
+            this.getUser(this.selectedUser.id)
+            $("#creditsModal").modal("hide")
+          })
+        }
+      },
+      validateCredits() {
+        var error = false
+        if (!this.creditsAmount || this.creditsAmount < 0) {
+          this.creditsAmountError = "Minimum amount is 0"
+          error = true
+        } else {
+          this.creditsAmountError = null
+        }
+
+        if (!this.creditsStartDate) {
+          this.creditsStartDateError = "Required"
+          error = true
+        } else {
+          this.creditsStartDateError = null
+        }
+
+        if (!this.creditsExpiryDate) {
+          this.creditsExpiryDateError = "Required"
+          error = true
+        } else if (this.creditsExpiryDate <= this.creditsStartDate) {
+          this.creditsExpiryDateError = "Expiry date must come after start date"
+          error = true
+        } else {
+          this.creditsExpiryDateError = null
+        }
+        // is valid?
+        return !error
+      },
+
+      // orders
+      showAddOrUpdateOrderModal(order) {
+        this.orderNameError = null
+        this.orderCurrencyError = null
+        this.orderTotalChargeError = null
+        this.orderServiceChargeError = null
+        this.orderTasError = null
+        this.orderDeductCreditsError = null
+        this.orderErrors = null
+        if (order) {
+          console.log("update order")
+          this.orderSubmitType = "update"
+          this.orderId = order.id
+          this.orderName = order.name
+          this.orderCurrency = order.currency
+          this.orderTotalCharge = order.total_charge
+          this.orderServiceCharge = order.service_charge
+          this.orderTas = order.tas
+          this.orderDeductCredits = false
+        } else {
+          console.log("add order")
+          this.orderSubmitType = "add"
+          this.orderId = null
+          this.orderName = null
+          this.orderCurrency = "credits"
+          this.orderTotalCharge = 0
+          this.orderServiceCharge = 0
+          this.orderTas = null
+          this.orderDeductCredits = true
+        }
+        $("#orderModal").modal("show")
+      },
+      addOrUpdateOrder() {
+        if (this.validateOrder()) {
+          axios({
+            headers: { "X-CSRFToken": csrfToken },
+            method: "post",
+            url: `/portal/admin/user/order/add-or-update`,
+            data: {
+              user: this.selectedUser.id,
+              type: this.orderSubmitType,
+              id: this.orderSubmitType == "add" ? null : this.orderId,
+              name: this.orderName,
+              currency: this.orderCurrency,
+              total_charge: this.orderTotalCharge,
+              service_charge: this.orderServiceCharge,
+              tas: this.orderTas,
+              deduct_credits: this.orderDeductCredits,
+            }
+          }).then(response => {
+            // refresh user
+            console.log(response["data"])
+            const data = response["data"]
+            if (data["status"]) {
+              this.getUser(this.selectedUser.id)
+              $("#orderModal").modal("hide")
+            } else {
+              this.orderErrors = data["errors"]
+            }
+          })
+        }
+      },
+      validateOrder() {
+        var error = false
+        if (!this.orderName) {
+          this.orderNameError = "Required"
+          error = true
+        } else {
+          this.orderNameError = null
+        }
+
+        if (!this.orderTas) {
+          this.orderTasError = "Required"
+          error = true
+        } else {
+          this.orderTasError = null
+        }
+        
+        if (!this.orderCurrency) {
+          this.orderCurrencyError = "Required"
+          error = true
+        } else {
+          this.orderCurrencyError = null
+        }
+        
+        if (!this.orderTotalCharge == null || this.orderTotalCharge < 0) {
+          this.orderTotalChargeError = "Minimum amount is 0"
+          error = true
+        } else {
+          this.orderTotalChargeError = null
+        }
+        
+        if (!this.orderServiceCharge == null || this.orderServiceCharge < 0) {
+          this.orderServiceChargeError = "Minimum amount is 0"
+          error = true
+        } else {
+          this.orderServiceChargeError = null
+        }
+
+        if (this.orderCurrency != "credits" && this.orderDeductCredits) {
+          this.orderDeductCreditsError = "To deduct credits, currency must be credits"
+          error = true
+        } else {
+          this.orderDeductCreditsError = null
+        }
+
+        // if (!this.creditsAmount || this.creditsAmount < 0) {
+        //   this.creditsAmountError = "Minimum amount is 0"
+        //   error = true
+        // } else {
+        //   this.creditsAmountError = null
+        // }
+
+        // if (!this.creditsStartDate) {
+        //   this.creditsStartDateError = "Required"
+        //   error = true
+        // } else {
+        //   this.creditsStartDateError = null
+        // }
+
+        // if (!this.creditsExpiryDate) {
+        //   this.creditsExpiryDateError = "Required"
+        //   error = true
+        // } else if (this.creditsExpiryDate <= this.creditsStartDate) {
+        //   this.creditsExpiryDateError = "Expiry date must come after start date"
+        //   error = true
+        // } else {
+        //   this.creditsExpiryDateError = null
+        // }
+        // is valid?
+        return !error
+      },
+
+      // delete credits or order
+      deleteObj() {
+        // delete obj
+        axios({
+          headers: { "X-CSRFToken": csrfToken },
+          method: "get",
+          url: `/portal/admin/user/${this.selectedUser.id}/${this.selectedObj.type}/delete/${this.selectedObj.id}`,
+        }).then(response => {
+          // refresh user
+          this.getUser(this.selectedUser.id)
+        })
+      }
+    },
+    mounted() {
+      var table = $('#clientsTable').DataTable({
+        dom: "<'row'<'col-sm-12'f>>" +
+          "<'row'<'col-sm-12 table-responsive mb-5'tr>>" +
+          "<'row'<'col-sm-12'p><'col-sm-12'>>",
+        fixedColumns: true,
+        ordering: true,
+        order: [[3, "desc"]],
+      });
+
+      $('#clientsTable').on('click', 'tr', function () {
+        if ($(this).hasClass('selected')) {
+          $(this).removeClass('selected');
+          app.selectedUser = null
+        }
+        else {
+          table.$('tr.selected').removeClass('selected');
+          $(this).addClass('selected');
+          app.getUser(parseInt(table.row(this).data()[4]))
+        }
+      });
+    }
+  })
+</script>
+{% endblock more-js %}

@@ -1,0 +1,106 @@
+{% extends 'portal/user/base.html' %}
+{% load static %}
+
+{% block nav-credits %}active{% endblock nav-credits %}
+
+{% block banner-header %}Credits{% endblock banner-header %}
+
+{% block content %}
+<!-- Body -->
+<div class="card-body">
+  <div id="app" v-cloak>
+    <div class="mb-10">
+      <h4 class="card-text mb-3">Active Credits</h4>
+      <div class="table-responsive pb-3">
+        <table id="activeCreditsTable" class="table table-hovertable-responsive">
+          <thead class="thead-light ">
+            <tr>
+              <th scope="col" class="text-center">Available credits</th>
+              <th scope="col" class="text-center">Start date</th>
+              <th scope="col" class="text-center">Expiry date</th>
+            </tr>
+          </thead>
+          <tbody class="table-align-middle">
+            <tr v-for="(credit, index) in activeCredits()">
+              <td class="pl-2 pr-2 text-center">[[ credit.credits ]]</td>
+              <td class="pl-2 pr-2 text-center">[[ dateFormat(credit.start_datetime) ]]</td>
+              <td class="pl-2 pr-2 text-center">[[ dateFormat(credit.expiry_datetime) ]]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <h4 class="card-text mb-3">Expired Credits</h4>
+      <div class="table-responsive">
+        <table id="expiredCreditsTable" class="table table-hovertable-responsive">
+          <thead class="thead-light ">
+            <tr>
+              <th scope="col" class="text-center">Available credits</th>
+              <th scope="col" class="text-center">Start date</th>
+              <th scope="col" class="text-center">Expiry date</th>
+            </tr>
+          </thead>
+          <tbody class="table-align-middle">
+            <tr v-for="(credit, index) in expiredCredits()">
+              <td class="pl-2 pr-2 text-center">[[ credit.credits ]]</td>
+              <td class="pl-2 pr-2 text-center">[[ dateFormat(credit.start_datetime) ]]</td>
+              <td class="pl-2 pr-2 text-center">[[ dateFormat(credit.expiry_datetime) ]]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Body -->
+{% endblock content %}
+
+{% block js %}
+<script>
+  $(document).ready(function () {
+    $('#activeCreditsTable').DataTable({
+      dom: "<'row'<'col-sm-12 col-md-6'><'col-sm-12 col-md-6 text-right'l>>" +
+        "<'row'<'col-sm-12'tr>>" +
+        "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+      searching: false,
+      "order": [[2, "asc"]],
+      "ordering": true,
+      "columnDefs": [
+        { className: "text-nowrap", "targets": [0, 1, 2] }
+      ]
+    });
+    $('#expiredCreditsTable').DataTable({
+      dom: "<'row'<'col-sm-12 col-md-6'><'col-sm-12 col-md-6 text-right'l>>" +
+        "<'row'<'col-sm-12'tr>>" +
+        "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+      searching: false,
+      "order": [[2, "desc"]],
+      "ordering": true,
+      "columnDefs": [
+        { className: "text-nowrap", "targets": [0, 1, 2] }
+      ]
+    });
+  });
+
+  let app = new Vue({
+    delimiters: ['[[', ']]'],
+    el: '#app',
+    data: {
+      credits: {{ credits | safe }},
+  current_datetime: new Date(),
+    },
+  methods: {
+    expiredCredits() {
+      return this.credits.filter(credit => new Date(credit.expiry_datetime) < this.current_datetime)
+    },
+    activeCredits() {
+      return this.credits.filter(credit => new Date(credit.expiry_datetime) > this.current_datetime)
+    },
+    dateFormat(timeString){
+      return moment(timeString).format("D MMM YYYY")
+    },
+  },
+  })
+</script>
+{% endblock js %}

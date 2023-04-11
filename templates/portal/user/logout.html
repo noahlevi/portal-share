@@ -1,0 +1,22 @@
+{% extends 'portal/user/base.html' %}
+{% load static %}
+
+{% block nav-logout %}active{% endblock nav-logout %}
+
+{% block banner-header %}API key{% endblock banner-header %}
+
+{% block content %}
+<!-- Body -->
+<div class="card-body d-flex">
+  <div class="mx-auto text-center">
+    <h3 class="card-text mb-3">See you soon!</h3>
+    <a id="logout" href="{% url 'users:logout' %}" class="btn btn-primary">
+      Logout
+    </a>
+  </div>
+</div>
+<!-- End Body -->
+{% endblock content %}
+
+{% block js %}
+{% endblock js %}
